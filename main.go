@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -24,9 +23,13 @@ type TodoItem struct {
 }
 
 type TodoItemCreation struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Status      string     `json:"status"`
+	Title       string `json:"title" gorm:"column:title;"`
+	Description string `json:"description" gorm:"column:description;"`
+	Status      string `json:"status" gorm:"column:status"`
+}
+
+func (TodoItemCreation) TableName() string {
+	return "todo_items"
 }
 
 func main() {
@@ -38,9 +41,6 @@ func main() {
 		log.Fatal("Lỗi connect database: ", err)
 	}
 
-	fmt.Println(db)
-
-	fmt.Println("Hello, World!")
 	now := time.Now().UTC()
 	item := TodoItem{
 		Id:          1,
@@ -66,7 +66,7 @@ func main() {
 	{
 		items := v1.Group("/items")
 		{
-			items.POST("", CreateItem())
+			items.POST("", CreateItem(db))
 			items.GET("")
 			items.GET("/:id")
 			items.PATCH("/:id")
@@ -87,12 +87,19 @@ func main() {
 	}
 }
 
-func CreateItem() func(*gin.Context) {
+func CreateItem(db *gorm.DB) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// chỉ nhận body json
 		var data TodoItemCreation
 
 		if err := c.ShouldBind(&data); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		if err := db.Create(&data).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
