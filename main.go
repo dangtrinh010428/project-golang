@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"time"
-)
-
-import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type TodoItem struct {
@@ -22,7 +23,23 @@ type TodoItem struct {
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
+type TodoItemCreation struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string     `json:"status"`
+}
+
 func main() {
+
+	dsn := os.Getenv("MYSQL_CONNECTION")
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+
+	if err != nil {
+		log.Fatal("Lỗi connect database: ", err)
+	}
+
+	fmt.Println(db)
+
 	fmt.Println("Hello, World!")
 	now := time.Now().UTC()
 	item := TodoItem{
@@ -36,16 +53,54 @@ func main() {
 
 	r := gin.Default()
 
+	// CRUD: Create Read Update Delete
+	// POST /v1/items create new
+	// GET /v1/items list items
+	// GET /v1/item/:id get item by ID
+	// PUT thay đổi cả object
+	// PATCH thay đổi từng thành phần
+	// POST  /v1/items/:id update item by ID
+	// DELETE /v1/items/:id Delete item by ID
+
+	v1 := r.Group("/v1")
+	{
+		items := v1.Group("/items")
+		{
+			items.POST("", CreateItem())
+			items.GET("")
+			items.GET("/:id")
+			items.PATCH("/:id")
+			items.DELETE("/:id")
+		}
+	}
+
 	// Define a simple GET endpoint
 	r.GET("/ping", func(c *gin.Context) {
 		// Return JSON response
 		c.JSON(http.StatusOK, gin.H{
 			"message": item,
-			
 		})
 	})
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)
+	}
+}
+
+func CreateItem() func(*gin.Context) {
+	return func(c *gin.Context) {
+		// chỉ nhận body json
+		var data TodoItemCreation
+
+		if err := c.ShouldBind(&data); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data": data,
+		})
 	}
 }
