@@ -97,6 +97,10 @@ func (TodoItem) TableName() string {
 	return "todo_items"
 }
 
+func (TodoItem) TableName() string {
+	return "todo_items"
+}
+
 type TodoItemCreation struct {
 	Id          int         `json:"-" gorm:"column:id"`
 	Title       string      `json:"title" gorm:"column:title;"`
@@ -136,6 +140,10 @@ func main() {
 			items.GET("/:id", GetItem(db))
 			items.PATCH("/:id", Update(db))
 			items.DELETE("/:id", Delete(db))
+			items.GET("", GetAllItem(db))
+			items.GET("/:id", GetItem(db))
+			items.PATCH("/:id", Update(db))
+			items.DELETE("/:id", Delete(db))
 		}
 	}
 
@@ -144,6 +152,7 @@ func main() {
 	}
 }
 
+// Tạo mới item
 // Tạo mới item
 func CreateItem(db *gorm.DB) func(*gin.Context) {
 	return func(c *gin.Context) {
