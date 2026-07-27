@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 func main() {
 
 	dsn := os.Getenv("MYSQL_CONNECTION")
+	fmt.Print("MYSQL_CONNECTION: ", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -29,7 +31,7 @@ func main() {
 		{
 			items.POST("", ginitem.CreateItem(db))
 			items.GET("", GetAllItem(db))
-			items.GET("/:id", GetItem(db))
+			items.GET("/:id", ginitem.GetItem(db))
 			items.PATCH("/:id", Update(db))
 			items.DELETE("/:id", Delete(db))
 		}
@@ -37,31 +39,6 @@ func main() {
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)
-	}
-}
-
-func GetItem(db *gorm.DB) func(*gin.Context) {
-	return func(c *gin.Context) {
-		// chỉ nhận body json
-		var data model.TodoItem
-
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		if err := db.Where("id = ?", id).First(&data).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}
 }
 

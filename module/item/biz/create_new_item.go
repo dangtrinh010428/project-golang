@@ -8,7 +8,7 @@ import (
 )
 
 type CreateItemStorage interface {
-	createItem(ctx context.Context, data *model.TodoItemCreation) error
+	CreateItem(ctx context.Context, data *model.TodoItemCreation) error
 }
 
 type createItemBiz struct {
@@ -16,7 +16,7 @@ type createItemBiz struct {
 }
 
 func NewCreateItemBiz(store CreateItemStorage) *createItemBiz {
-	return &CreateItemStorage{store}
+	return &createItemBiz{store}
 }
 
 func (biz *createItemBiz) CreateNewItem(ctx context.Context, data *model.TodoItemCreation) error {
@@ -25,7 +25,7 @@ func (biz *createItemBiz) CreateNewItem(ctx context.Context, data *model.TodoIte
 		return model.ErrTiteIsBlank
 	}
 
-	if err := biz.store.createItem(ctx, data), err != nil {
+	if err := biz.store.CreateItem(ctx, data); err != nil {
 		return err
 	}
 	return nil
