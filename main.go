@@ -32,7 +32,7 @@ func main() {
 			items.POST("", ginitem.CreateItem(db))
 			items.GET("", GetAllItem(db))
 			items.GET("/:id", ginitem.GetItem(db))
-			items.PATCH("/:id", Update(db))
+			items.PATCH("/:id", ginitem.UpdateItem(db))
 			items.DELETE("/:id", Delete(db))
 		}
 	}
@@ -77,11 +77,6 @@ func GetAllItem(db *gorm.DB) func(*gin.Context) {
 	}
 }
 
-func Update(db *gorm.DB) func(*gin.Context) {
-	return func(c *gin.Context) {
-		
-	}
-}
 
 func Delete(db *gorm.DB) func(*gin.Context) {
 	return func(c *gin.Context) {
