@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -33,7 +32,7 @@ func main() {
 			items.GET("", GetAllItem(db))
 			items.GET("/:id", ginitem.GetItem(db))
 			items.PATCH("/:id", ginitem.UpdateItem(db))
-			items.DELETE("/:id", Delete(db))
+			items.DELETE("/:id", ginitem.DeleteItem(db))
 		}
 	}
 
@@ -74,28 +73,5 @@ func GetAllItem(db *gorm.DB) func(*gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
-	}
-}
-
-
-func Delete(db *gorm.DB) func(*gin.Context) {
-	return func(c *gin.Context) {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		if err := db.Table(model.TodoItem{}.TableName()).Where("id = ?", id).Updates(map[string]interface{}{"status": "Deleted"}).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))
 	}
 }
